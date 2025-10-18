@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'citas',
     'especialidades',
     'horarios',
+    'reportes', 
 ]
 
 MIDDLEWARE = [

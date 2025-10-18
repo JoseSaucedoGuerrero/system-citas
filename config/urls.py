@@ -25,7 +25,8 @@ urlpatterns = [
     path('', home, name='home'),
     path('usuarios/', include('usuarios.urls')),
     path('citas/', include('citas.urls')),
-    path('doctores/', include('doctores.urls')),  
+    path('doctores/', include('doctores.urls')),
+    path('reportes/', include('reportes.urls')),  
 ]
 
 # Servir archivos media en desarrollo
