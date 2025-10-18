@@ -6,7 +6,22 @@ from .models import Usuario
 from pacientes.models import Paciente
 
 def home(request):
-    """Página de inicio"""
+    """Página de inicio con redirección según rol"""
+    
+    # Si el usuario está autenticado, redirigir según su rol
+    if request.user.is_authenticated:
+        
+        # Redirigir doctores a su dashboard
+        if request.user.rol == 'doctor':
+            return redirect('dashboard_doctor')
+        
+        # Redirigir administradores a su dashboard
+        elif request.user.is_staff or request.user.is_superuser:
+            return redirect('dashboard_admin')
+        
+        # Pacientes ven el home normal (con opciones de agendar citas)
+    
+    # Usuarios no autenticados ven la página de inicio
     return render(request, 'home.html')
 
 def login_view(request):
