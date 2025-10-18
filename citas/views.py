@@ -8,6 +8,7 @@ from doctores.models import Doctor
 from especialidades.models import Especialidad
 from pacientes.models import Paciente
 from horarios.models import Horario
+from django.core.exceptions import ValidationError
 
 @login_required
 def lista_especialidades(request):
@@ -73,39 +74,44 @@ def agendar_cita(request, doctor_id):
         motivo = request.POST.get('motivo')
         tipo = request.POST.get('tipo', 'primera_vez')
         
-        # Convertir a objetos de fecha y hora
-        fecha_obj = datetime.strptime(fecha, '%Y-%m-%d').date()
-        hora_inicio_obj = datetime.strptime(hora_inicio, '%H:%M').time()
-        
-        # Calcular hora_fin (sumar duración de la especialidad)
-        duracion = doctor.especialidades.first().duracion_cita if doctor.especialidades.exists() else 30
-        hora_fin_obj = (datetime.combine(fecha_obj, hora_inicio_obj) + timedelta(minutes=duracion)).time()
-        
-        # Verificar si ya existe una cita en ese horario
-        cita_existente = Cita.objects.filter(
-            doctor=doctor,
-            fecha=fecha_obj,
-            hora_inicio=hora_inicio_obj
-        ).exclude(estado='cancelada').exists()
-        
-        if cita_existente:
-            messages.error(request, 'Este horario ya está ocupado. Por favor elige otro.')
+        try:
+            # Convertir a objetos de fecha y hora
+            fecha_obj = datetime.strptime(fecha, '%Y-%m-%d').date()
+            hora_inicio_obj = datetime.strptime(hora_inicio, '%H:%M').time()
+            
+            # Calcular hora_fin (sumar duración de la especialidad)
+            duracion = doctor.especialidades.first().duracion_cita if doctor.especialidades.exists() else 30
+            hora_fin_obj = (datetime.combine(fecha_obj, hora_inicio_obj) + timedelta(minutes=duracion)).time()
+            
+            # Crear la cita (se ejecutarán las validaciones automáticamente)
+            cita = Cita(
+                paciente=paciente,
+                doctor=doctor,
+                fecha=fecha_obj,
+                hora_inicio=hora_inicio_obj,
+                hora_fin=hora_fin_obj,
+                tipo=tipo,
+                motivo=motivo,
+                estado='pendiente'
+            )
+            
+            # Validar antes de guardar
+            cita.clean()
+            cita.save()
+            
+            messages.success(request, f'¡Cita agendada exitosamente para el {fecha} a las {hora_inicio}!')
+            return redirect('mis_citas')
+            
+        except ValidationError as e:
+            # Mostrar errores de validación
+            for field, errors in e.message_dict.items():
+                for error in errors:
+                    messages.error(request, error)
             return redirect('disponibilidad_doctor', doctor_id=doctor.id)
         
-        # Crear la cita
-        cita = Cita.objects.create(
-            paciente=paciente,
-            doctor=doctor,
-            fecha=fecha_obj,
-            hora_inicio=hora_inicio_obj,
-            hora_fin=hora_fin_obj,
-            tipo=tipo,
-            motivo=motivo,
-            estado='pendiente'
-        )
-        
-        messages.success(request, f'¡Cita agendada exitosamente para el {fecha} a las {hora_inicio}!')
-        return redirect('mis_citas')
+        except Exception as e:
+            messages.error(request, f'Error al agendar la cita: {str(e)}')
+            return redirect('disponibilidad_doctor', doctor_id=doctor.id)
     
     return redirect('disponibilidad_doctor', doctor_id=doctor.id)
 

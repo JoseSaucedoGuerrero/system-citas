@@ -8,6 +8,7 @@ from .models import Doctor
 from citas.models import Cita
 from horarios.models import Horario, Excepcion
 from pacientes.models import Paciente
+from django.db.models import Q
 
 @login_required
 def dashboard_doctor(request):
@@ -349,3 +350,43 @@ def marcar_no_asistio(request, cita_id):
         messages.error(request, 'Error al modificar la cita.')
     
     return redirect('dashboard_doctor')
+
+
+@login_required
+def buscar_doctores(request):
+    """Búsqueda avanzada de doctores"""
+    
+    # Obtener parámetros de búsqueda
+    query = request.GET.get('q', '')
+    especialidad_id = request.GET.get('especialidad')
+    
+    # Query base
+    doctores = Doctor.objects.filter(activo=True)
+    
+    # Búsqueda por nombre
+    if query:
+        doctores = doctores.filter(
+            Q(usuario__first_name__icontains=query) |
+            Q(usuario__last_name__icontains=query) |
+            Q(licencia_medica__icontains=query)
+        )
+    
+    # Filtrar por especialidad
+    if especialidad_id:
+        doctores = doctores.filter(especialidades__id=especialidad_id)
+    
+    # Evitar duplicados
+    doctores = doctores.distinct()
+    
+    # Especialidades para el filtro
+    from especialidades.models import Especialidad
+    especialidades = Especialidad.objects.filter(activo=True)
+    
+    context = {
+        'doctores': doctores,
+        'especialidades': especialidades,
+        'query': query,
+        'especialidad_id': especialidad_id,
+    }
+    
+    return render(request, 'doctores/buscar_doctores.html', context)

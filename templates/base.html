@@ -46,6 +46,11 @@
                         
                         {% if user.rol == 'paciente' %}
                         <li class="nav-item">
+                            <a class="nav-link" href="{% url 'buscar_doctores' %}">
+                                <i class="fas fa-search"></i> Buscar Doctores
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="{% url 'lista_especialidades' %}">
                                 <i class="fas fa-calendar-plus"></i> Agendar Cita
                             </a>
