@@ -105,31 +105,31 @@
         </div>
         {% endif %}
         
-        {% if user.rol == 'doctor' %}
-        <div class="col-md-6 mb-3">
-            <div class="card border-info">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <i class="fas fa-calendar text-info"></i> Mi Agenda
-                    </h5>
-                    <p class="card-text">Gestiona tu horario y disponibilidad.</p>
-                    <a href="#" class="btn btn-info">Ver Agenda</a>
+            {% if user.rol == 'doctor' %}
+            <div class="col-md-6 mb-3">
+                <div class="card border-info">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-calendar text-info"></i> Mi Agenda
+                        </h5>
+                        <p class="card-text">Gestiona tu horario y citas del día.</p>
+                        <a href="{% url 'dashboard_doctor' %}" class="btn btn-info">Ir al Dashboard</a>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="col-md-6 mb-3">
-            <div class="card border-warning">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <i class="fas fa-users text-warning"></i> Mis Pacientes
-                    </h5>
-                    <p class="card-text">Consulta el historial de tus pacientes.</p>
-                    <a href="#" class="btn btn-warning">Ver Pacientes</a>
+
+            <div class="col-md-6 mb-3">
+                <div class="card border-warning">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-users text-warning"></i> Mis Pacientes
+                        </h5>
+                        <p class="card-text">Consulta el historial de tus pacientes.</p>
+                        <a href="{% url 'mis_pacientes' %}" class="btn btn-warning">Ver Pacientes</a>
+                    </div>
                 </div>
             </div>
-        </div>
-        {% endif %}
+            {% endif %}
     </div>
     {% endif %}
 </div>

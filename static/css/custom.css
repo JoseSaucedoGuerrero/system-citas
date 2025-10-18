@@ -96,3 +96,55 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .alert-info {
     border-left-color: #17a2b8;
 }
+/* Estilos para el dashboard del doctor */
+.timeline {
+    position: relative;
+}
+
+.timeline .card {
+    transition: all 0.3s ease;
+}
+
+.timeline .card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Estadísticas del dashboard */
+.card-body i.fa-3x {
+    opacity: 0.8;
+}
+
+.card:hover .card-body i.fa-3x {
+    opacity: 1;
+    transform: scale(1.1);
+    transition: all 0.3s ease;
+}
+
+/* Tabla de citas */
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+
+/* Botones de acción en tablas */
+.btn-group-sm .btn {
+    margin: 0 2px;
+}
+
+/* Badges personalizados */
+.badge {
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+/* Alertas en atender cita */
+.alert h5 {
+    margin-bottom: 10px;
+    font-size: 1.1em;
+}
+
+/* Horarios */
+.border-start {
+    border-left-width: 4px !important;
+}

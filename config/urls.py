@@ -24,7 +24,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home, name='home'),
     path('usuarios/', include('usuarios.urls')),
-    path('citas/', include('citas.urls')),  
+    path('citas/', include('citas.urls')),
+    path('doctores/', include('doctores.urls')),  
 ]
 
 # Servir archivos media en desarrollo
