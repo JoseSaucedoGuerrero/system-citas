@@ -106,3 +106,127 @@ def logout_view(request):
     logout(request)
     messages.info(request, 'Sesión cerrada correctamente.')
     return redirect('login')
+
+@login_required
+def perfil_usuario(request):
+    """Ver perfil del usuario"""
+    usuario = request.user
+    
+    # Obtener perfil específico según rol
+    perfil_especifico = None
+    if hasattr(usuario, 'paciente'):
+        perfil_especifico = usuario.paciente
+    elif hasattr(usuario, 'doctor'):
+        perfil_especifico = usuario.doctor
+    
+    context = {
+        'usuario': usuario,
+        'perfil_especifico': perfil_especifico,
+    }
+    
+    return render(request, 'usuarios/perfil.html', context)
+
+@login_required
+def editar_perfil(request):
+    """Editar perfil del usuario"""
+    usuario = request.user
+    
+    if request.method == 'POST':
+        # Datos básicos del usuario
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        email = request.POST.get('email')
+        telefono = request.POST.get('telefono')
+        fecha_nacimiento = request.POST.get('fecha_nacimiento')
+        
+        # Validar email único (excepto el propio)
+        if Usuario.objects.filter(email=email).exclude(id=usuario.id).exists():
+            messages.error(request, 'Este email ya está registrado por otro usuario.')
+            return redirect('editar_perfil')
+        
+        # Actualizar usuario
+        usuario.first_name = first_name
+        usuario.last_name = last_name
+        usuario.email = email
+        usuario.telefono = telefono
+        
+        if fecha_nacimiento:
+            from datetime import datetime
+            try:
+                usuario.fecha_nacimiento = datetime.strptime(fecha_nacimiento, '%Y-%m-%d').date()
+            except:
+                pass
+        
+        # Manejar foto de perfil
+        if 'foto' in request.FILES:
+            usuario.foto = request.FILES['foto']
+        
+        usuario.save()
+        
+        # Actualizar datos específicos según rol
+        if usuario.rol == 'paciente' and hasattr(usuario, 'paciente'):
+            paciente = usuario.paciente
+            paciente.direccion = request.POST.get('direccion', '')
+            paciente.grupo_sanguineo = request.POST.get('grupo_sanguineo', '')
+            paciente.alergias = request.POST.get('alergias', '')
+            paciente.contacto_emergencia = request.POST.get('contacto_emergencia', '')
+            paciente.telefono_emergencia = request.POST.get('telefono_emergencia', '')
+            paciente.save()
+        
+        elif usuario.rol == 'doctor' and hasattr(usuario, 'doctor'):
+            doctor = usuario.doctor
+            doctor.biografia = request.POST.get('biografia', '')
+            doctor.save()
+        
+        messages.success(request, '¡Perfil actualizado correctamente!')
+        return redirect('perfil_usuario')
+    
+    # Obtener perfil específico
+    perfil_especifico = None
+    if hasattr(usuario, 'paciente'):
+        perfil_especifico = usuario.paciente
+    elif hasattr(usuario, 'doctor'):
+        perfil_especifico = usuario.doctor
+    
+    context = {
+        'usuario': usuario,
+        'perfil_especifico': perfil_especifico,
+    }
+    
+    return render(request, 'usuarios/editar_perfil.html', context)
+
+@login_required
+def cambiar_password(request):
+    """Cambiar contraseña del usuario"""
+    if request.method == 'POST':
+        password_actual = request.POST.get('password_actual')
+        password_nueva = request.POST.get('password_nueva')
+        password_confirmar = request.POST.get('password_confirmar')
+        
+        # Verificar contraseña actual
+        if not request.user.check_password(password_actual):
+            messages.error(request, 'La contraseña actual es incorrecta.')
+            return redirect('cambiar_password')
+        
+        # Validar que las nuevas contraseñas coincidan
+        if password_nueva != password_confirmar:
+            messages.error(request, 'Las contraseñas nuevas no coinciden.')
+            return redirect('cambiar_password')
+        
+        # Validar longitud mínima
+        if len(password_nueva) < 6:
+            messages.error(request, 'La contraseña debe tener al menos 6 caracteres.')
+            return redirect('cambiar_password')
+        
+        # Cambiar contraseña
+        request.user.set_password(password_nueva)
+        request.user.save()
+        
+        # Mantener la sesión activa después de cambiar contraseña
+        from django.contrib.auth import update_session_auth_hash
+        update_session_auth_hash(request, request.user)
+        
+        messages.success(request, '¡Contraseña cambiada exitosamente!')
+        return redirect('perfil_usuario')
+    
+    return render(request, 'usuarios/cambiar_password.html')
