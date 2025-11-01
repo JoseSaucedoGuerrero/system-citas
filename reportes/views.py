@@ -318,3 +318,59 @@ def exportar_pdf_citas(request):
     """Exportar citas a PDF - Funcionalidad básica"""
     messages.info(request, 'Funcionalidad de exportación a PDF en desarrollo.')
     return redirect('reporte_citas')
+
+
+@login_required
+@user_passes_test(es_admin)
+def dashboard_admin(request):
+    """Dashboard principal de administración con calendario"""
+    
+    # Fechas para filtros
+    hoy = timezone.now().date()
+    inicio_mes = hoy.replace(day=1)
+    
+    # Estadísticas generales
+    total_pacientes = Paciente.objects.filter(activo=True).count()
+    total_doctores = Doctor.objects.filter(activo=True).count()
+    total_especialidades = Especialidad.objects.filter(activo=True).count()
+    
+    # Citas del mes actual
+    citas_mes = Cita.objects.filter(
+        fecha__year=hoy.year,
+        fecha__month=hoy.month
+    )
+    
+    total_citas_mes = citas_mes.count()
+    citas_hoy = Cita.objects.filter(fecha=hoy).exclude(estado='cancelada').order_by('hora_inicio')
+    citas_pendientes = Cita.objects.filter(
+        fecha__gte=hoy,
+        estado__in=['pendiente', 'confirmada']
+    ).count()
+    
+    # Preparar datos para el calendario (próximos 3 meses)
+    from datetime import timedelta
+    fecha_inicio_cal = hoy - timedelta(days=30)
+    fecha_fin_cal = hoy + timedelta(days=90)
+    
+    citas_calendario = Cita.objects.filter(
+        fecha__range=[fecha_inicio_cal, fecha_fin_cal]
+    ).select_related('paciente__usuario', 'doctor__usuario').order_by('fecha', 'hora_inicio')
+    
+    # Estadísticas rápidas
+    citas_completadas = citas_mes.filter(estado='completada').count()
+    citas_canceladas = citas_mes.filter(estado='cancelada').count()
+    
+    context = {
+        'total_pacientes': total_pacientes,
+        'total_doctores': total_doctores,
+        'total_especialidades': total_especialidades,
+        'total_citas_mes': total_citas_mes,
+        'citas_completadas': citas_completadas,
+        'citas_pendientes': citas_pendientes,
+        'citas_canceladas': citas_canceladas,
+        'citas_hoy': citas_hoy,
+        'citas_calendario': citas_calendario,
+        'hoy': hoy,
+    }
+    
+    return render(request, 'reportes/dashboard_admin_calendario.html', context)
